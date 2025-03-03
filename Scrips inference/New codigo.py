@@ -1,16 +1,29 @@
 from PIL import Image
-from landingai.predict import SnowflakeNativeAppPredictor
-url = "http://b4c4qqkz-rpwerko-lai-snow-product-mgmt.snowflakecomputing.app"
-# Load your image
-image = Image.open("/Users/kellycastrillon/DATASETS/Tests-do_not_delete/DATASET- CON PASCAL OD/handsx-ray-170544090241/handsx-ray-170544090241/dev/Images/2023-04-20T17-40-17-549Z-image3_png_jpg.rf.4bb8448a11e543676717a28ef076ca1e.jpg")
-# Run inference
-predictor = SnowflakeNativeAppPredictor(
-  endpoint_id="c7192fbc-9e1b-4849-8f62-5cfa6589a156"
-  native_app_url=url,
-  snowflake_account="IPB83164"
-  snowflake_user="PRODUCT_SHARED_ACCOUNT"
-  snowflake_password="NativeApp5"
-  # or, in case of private key auth, use the following instead of `snowflake_password`:
-  # snowflake_private_key="-----BEGIN PRIVATE KEY-----\nMIIEvg...",
-)
-predictions = predictor.predict(image)
+from landingai.predict import Predictor
+
+# Configurar el registro de errores
+logging.basicConfig(filename="image_processing_errors.log", level=logging.ERROR)
+
+# Validación de red
+def check_network_connection(url):
+    try:
+        response = requests.get(url, timeout=5)  # Timeout de 5 segundos
+        if response.status_code == 200:
+            print("Network connection is good.")
+            return True
+        else:
+            print(f"Error: Failed to connect to the prediction service. Status code: {response.status_code}")
+            return False
+    except requests.RequestException as e:
+        print(f"Error: Unable to connect to the prediction service. Details: {e}")
+        return False
+
+# Validar que la carpeta existe
+def validate_folder(folder_path):
+    if not os.path.exists(folder_path):
+        print(f"Error: The folder '{folder_path}' does not exist.")
+        return False
+    if not os.access(folder_path, os.R_OK):
+        print(f"Error: No read permission for the folder '{folder_path}'.")
+        return False
+    return True
